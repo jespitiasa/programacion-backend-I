@@ -24,7 +24,7 @@ router.get('/:id', async(req, res) => {
     id = Number(id)
     if (isNaN(id)) {
         res.setHeader('Content-Type','application/json');
-        return res.status(400).json({error: 'id debe ser un número'})
+        return res.status(400).json({error: 'El ID debe ser Numerico'})
     }
 
     try {
@@ -43,15 +43,15 @@ router.get('/:id', async(req, res) => {
 
 router.post('/', (req, res) => {
     res.setHeader('Content-Type','application/json');
-    return res.status(201).json({payload: 'Producto creado'});
+    return res.status(201).json({payload: 'Producto creado con Exito'});
 })
 
 router.put('/:id', (req, res) => {
     res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload: `Producto: ${req.params.id} actualizado`});
+    return res.status(200).json({payload: `Producto: ${req.params.id} actualizado con Exito`});
 })
 
 router.delete('/:id', (req, res) => {
     res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload: `Producto: ${req.params.id} eliminado`});
+    return res.status(200).json({payload: `Producto: ${req.params.id} eliminado Satisfactoriamente`});
 })
