@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "title": "Pop! Spider-Man Last Stand",
+        "price": 15.00,
+        "thumbnail": "https://funko.com/dw/image/v2/BGTS_PRD/on/demandware.static/-/Sites-funko-master-catalog/default/dw16ca010f/images/funko/upload/84387_Marvel_SpidermanLastStand_POP_Front-WEB.png?sw=800&sh=800"
+    },
+    {
+        "id": 2,
+        "title": "Pop! Miles Morales Iron Spider",
+        "price": 12.00,
+        "thumbnail": "https://funko.com/dw/image/v2/BGTS_PRD/on/demandware.static/-/Sites-funko-master-catalog/default/dw1ba66bd5/images/funko/upload/83753a_Marvel_SPComics_Miles_POP_GLAM-WEB.png?sw=800&sh=800"
+    },
+    {
+        "id": 3,
+        "title": "Pop! Scarlet Spider (Kaine)",
+        "price": 12.00,
+        "thumbnail": "https://funko.com/dw/image/v2/BGTS_PRD/on/demandware.static/-/Sites-funko-master-catalog/default/dwba16f297/images/funko/upload/83752_Marvel_SPComics_KaineParker_POP_GLAM-WEB.png?sw=800&sh=800"
+    }
+]
