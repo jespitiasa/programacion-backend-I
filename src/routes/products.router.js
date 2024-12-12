@@ -4,7 +4,7 @@ import { errorHandler } from "../utils.js";
 
 export const router = Router()
 
-productManager.setPath('./src/data/productos.json')
+productManager.setPath('./src/data/products.json')
 
 
 router.get('/', async(req, res) => {
