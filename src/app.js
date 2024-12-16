@@ -11,7 +11,7 @@ app.use('/api/products',productsRouter);
 
 app.get('/',(req,res)=>{
     res.setHeader('Content-Type','text/plain');
-    res.status(200).send('OK');
+    res.status(200).send('Bienvenido POP');
 })
 
 const server=app.listen(PORT,()=>{
