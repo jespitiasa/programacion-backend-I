@@ -1,57 +1,69 @@
-import { Router } from "express";
-import { productManager } from "../dao/ProductManager.js";
-import { errorHandler } from "../utils.js";
+const ProductManager = require('../productManager')
+const Manager =  new ProductManager('productos.json');
 
-export const router = Router()
+const express = require('express')
+const router = express.Router()
 
-productManager.setPath('./src/data/products.json')
+router.get("/products",async (req,res)=>{
+    try{
+        const misProductos = await Manager.getProducts()
+        let limit = parseInt(req.query.limit)
 
-
-router.get('/', async(req, res) => {
-    try {
-        let products = await productManager.getProducts()
+        if (limit) return  res.send(misProductos.slice(0,limit))
         
-        res.setHeader('Content-Type','application/json');
-        return res.status(200).json({products});
-        
-    } catch (error) {
-        errorHandler(res, error)
+        return res.send(misProductos)
+    }catch{
+        console.log(error)
+        return res.send('Error al procesar los productos.')
     }
 })
 
-router.get('/:id', async(req, res) => {
-    let {id} = req.params
-    id = Number(id)
-    if (isNaN(id)) {
-        res.setHeader('Content-Type','application/json');
-        return res.status(400).json({error: 'El ID debe ser Numerico'})
-    }
+router.get('/products/:idProduct', async (req, res)=>{
+    try{
+        const product = await Manager.getProductById(req.params.idProduct)
 
-    try {
-        let productById = await productManager.getProductsById(id)
-        if (!productById) {
-            res.setHeader('Content-Type','application/json');
-            return res.status(404).json({error: 'Producto no encontrado'})
-        }
-        res.setHeader('Content-Type','application/json');
-        return res.status(200).json({payload: `Producto: ${productById}`});
+        if (!product) return res.send({error: "Producto no encontrado!"})
         
-    } catch (error) {
-        errorHandler(res, error)
+        return res.send(product)
+    }catch{
+        console.log(error)
+        return res.send('Error al intentar obtener el producto.')
     }
 })
 
-router.post('/', (req, res) => {
-    res.setHeader('Content-Type','application/json');
-    return res.status(201).json({payload: 'Producto creado con Exito'});
+router.post('/products', async(req, res)=>{
+    try{
+        const newProduct = req.body
+        const msg = await Manager.addProduct(newProduct)
+        res.json({message: `${msg}`})
+    }catch{
+        console.log(error)
+        return res.json({message:"Error durante el alta del producto."})
+    }
 })
 
-router.put('/:id', (req, res) => {
-    res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload: `Producto: ${req.params.id} actualizado con Exito`});
+router.put('/products/:idProduct', async(req, res)=>{
+    try{
+        const id = req.params.idProduct
+        const productUpdated = req.body
+        const msg = await Manager.updateProduct(productUpdated)
+        res.json({message: `${msg}`})
+    }catch{
+        console.log(error)
+        return res.send('Error durante la actualización del producto.')
+    }
 })
 
-router.delete('/:id', (req, res) => {
-    res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload: `Producto: ${req.params.id} eliminado Satisfactoriamente`});
+router.delete('/products/:idProduct', async(req, res)=>{
+    try{
+        const id = req.params.idProduct
+        console.log(id)
+        const msg = await Manager.deleteProduct(id)
+        res.json({message: `${msg}`})
+    }catch{
+        console.log(error)
+        return res.send('Error durante la eliminación del producto.')
+    }
 })
+
+module.exports = router
