@@ -16,6 +16,12 @@ socket.on("home", (data) => {
         code.innerText = product.code;
         const price = document.createElement("p");
         price.innerText = "$" + product.price;
+        const stock = document.createElement("p");
+        stock.innerText = document.createElement ("p");
+        const category = document.createElement("p");
+        category.innerText = document.createElement ("p");
+        
+
 
         div.appendChild(title);
         div.appendChild(description);
