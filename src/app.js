@@ -31,6 +31,8 @@ app.use("/real-time-products", realTimeProducts);
 const httpServer = app.listen(PORT, () => {
     console.log(`Servidor ejecutándose en el puerto ${PORT}`);
 });
+
+
 //SOCKETS
 
 export const socketServer = new Server(httpServer);

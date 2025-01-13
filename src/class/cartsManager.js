@@ -30,7 +30,7 @@ class CartsManager {
         if (cart) {
             return cart;
         } else {
-            throw new Error("No se encontro el ID pa :(");
+            throw new Error("No se encontro el ID:(");
         }
     }
 
