@@ -1,146 +1,97 @@
-import { Router } from 'express';
-
-import { ProductManager } from '../dao/ProductManager.js';
-import { processErrors } from '../utils.js';
+import { Router } from "express";
+import { productManager } from "../dao/ProductManager.js";
+import { errorHandler, generateId } from "../utils.js";
 
 export const router = Router();
 
-ProductManager.setPath('./src/data/products.json');
+productManager.setPath("./src/data/products.json");
 
-router.get('/', async (req, res) => {
-	try {
-		let products = await ProductManager.getProducts();
+router.get("/", async (req, res) => {
+  try {
+    let products = await productManager.getProducts();
+    const limit = parseInt(req.query.limit) || products.length;
 
-		let {limit}= req.query
-		if (limit) {
-			products= products.slice(0, limit)
-		}
+    const limitedProducts = products.slice(0, limit);
 
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(200).json({ products });
-	} catch (error) {
-		processErrors(res, error);
-	}
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ limitedProducts });
+  } catch (error) {
+    errorHandler(res, error);
+  }
 });
 
-router.get('/:pid', async (req, res) => {
-	let { pid } = req.params;
-	pid = Number(pid);
-	if (isNaN(pid)) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `Se requiere un id numérico` });
-	}
+router.get("/:pid", async (req, res) => {
+  let { id } = req.params;
 
-	try {
-		let product = await ProductManager.getProductsById(pid);
-		if (!product) {
-			res.setHeader('Content-Type', 'application/json');
-			return res.status(400).json({ error: `No existe product con id ${pid}` });
-		}
-
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(200).json({ product });
-	} catch (error) {
-		processErrors(res, error);
-	}
+  try {
+    let productById = await productManager.getProductsById(id);
+    if (!productById) {
+      res.setHeader("Content-Type", "application/json");
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ payload: productById });
+  } catch (error) {
+    errorHandler(res, error);
+  }
 });
 
-router.post('/', async (req, res) => {
-	let { title, description, price, code, stock, status, category} = req.body;
-	if (!title || !description || !price || !code || !stock || !status|| !category) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `Todos los campos del producto son requeridos a excepción de thumbnail` });
-	}
-
-	try {
-		let exist = await ProductManager.getProductByTitle(title);
-		if (exist) {
-			res.setHeader('Content-Type', 'application/json');
-			return res.status(400).json({ error: `Ya existe ${title} en DB` });
-		}
-
-		let newProduct = await ProductManager.addProduct({ title, description, price, code, stock, status, category });
-
-		req.socket.emit("newProduct", newProduct)
-
-		res.setHeader('Content-Type', 'application/json');
-		return res
-			.status(201)
-			.json({ payload: `Producto agregado exitosamente`, newProduct });
-	} catch (error) {
-		processErrors(res, error);
-	}
+router.post("/", async (req, res) => {
+  let product = req.body;
+  if (
+    !product.title ||
+    !product.description ||
+    !product.code ||
+    !product.price ||
+    !product.status ||
+    !product.stock ||
+    !product.category ||
+    !product.thumbnail
+  ) {
+    res.setHeader("Content-Type", "application/json");
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
+  }
+  let uniqueID = generateId();
+  product.id = uniqueID;
+  product.status = true;
+  try {
+    await productManager.addProduct(product);
+    res.setHeader("Content-Type", "application/json");
+    return res.status(201).json({ payload: { product } });
+  } catch (error) {
+    errorHandler(res, error);
+  }
 });
 
-router.put("/:pid", async (req, res) => {
-	let { pid } = req.params;
-	pid = Number(pid);
-	if (isNaN(pid)) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `Se requiere un id numérico` });
-	}
-
-	let toModify = req.body;
-
-	 if (toModify.pid) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `No está permitido modificar id` });
-	} 
-
-	try {
-		 if (toModify.title) {
-			let products = await ProductManager.getProducts();
-			let exist = products.find(p =>p.title.toLowerCase() === toModify.title.trim().toLowerCase() && p.pid != pid
-			);
-			if (exist) {
-				res.setHeader('Content-Type', 'application/json');
-				return res
-					.status(400)
-					.json({
-						error: `Ya existe un producto con title ${toModify.title} en DB. Tiene id ${exist.pid}`,
-					});
-			}
-		} 
-
-		let modifiedProduct = await ProductManager.modifyProduct(pid, toModify);
-
-		res.setHeader('Content-Type', 'application/json');
-		return res
-			.status(200)
-			.json({
-				payload: `Se modició el producto con id ${pid}`,
-				modifiedProduct,
-			});
-	} catch (error) {
-		processErrors(res, error);
-	}
+router.put("/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedFields = req.body;
+  try {
+    const existingProduct = await productManager.getProductsById(id);
+    if (!existingProduct) {
+      res.setHeader("Content-Type", "application/json");
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    const updatedProduct = { ...existingProduct, ...updatedFields, id };
+    await productManager.updateProduct(id, updatedProduct);
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ payload: `Producto: ${id} actualizado` });
+  } catch (error) {
+    errorHandler(res, error);
+  }
 });
 
-router.delete('/:pid', async(req, res) => {
-
-	let { pid } = req.params;
-	pid = Number(pid);
-	if (isNaN(pid)) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `Se requiere un id numérico` });
-	}
-
-	try {
-
-		let deletedProduct = await ProductManager.deleteProductById(pid);
-
-		req.socket.emit("deletedProduct", deletedProduct)
-
-		if(!deletedProduct) {
-			return res.status(404).json({ error: `No se encontró el producto con id ${pid}` })
-		}
-		
-		
-
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(200).json({ payload: `Producto con id ${pid} eliminado exitosamente`});
-	} catch (error) {
-		processErrors(res, error);
-	}
-
+router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await productManager.deleteProduct(id);
+    if (!result) {
+      res.setHeader("Content-Type", "application/json");
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    res.setHeader("Content-Type", "application/json");
+    return res.status(200).json({ payload: `Producto: ${id} eliminado` });
+  } catch (error) {
+    errorHandler(res, error);
+  }
 });

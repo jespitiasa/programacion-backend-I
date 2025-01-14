@@ -1,89 +1,90 @@
-import {Router} from "express"
-
-import { CarstManager } from "../dao/CartManager.js";
-import { processErrors } from '../utils.js';
+import { Router } from 'express';
+import { cartManager } from '../dao/CartManager.js';
+import { errorHandler } from '../utils.js';
 
 export const router=Router()
 
-CarstManager.setPath('./src/data/cart.json')
+cartManager.setPath('./src/data/carts.json')
 
-router.get("/", async(req, res)=>{
-
+router.get('/', async(req,res)=>{
     try {
-		let carts = await CarstManager.getCarts();
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(200).json({ carts });
-	} catch (error) {
-		processErrors(res, error)
-	}
-
+        let cart = await cartManager.getCart()
+        res.setHeader('Content-Type','application/json')
+        return res.status(200).json({cart})
+    } catch (error) {
+        errorHandler(res, error)
+    }
 })
 
-router.get("/:cid", async(req, res)=>{
-
-    let { cid } = req.params;
-        cid = Number(cid);
-
-        if (isNaN(cid)) {
-            res.setHeader('Content-Type', 'application/json');
-            return res.status(400).json({ error: `Se requiere un id numérico` });
-        }
-    
-        try {
-            let cart = await CarstManager.getCartsById(cid);
-            if (!cart) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(400).json({ error: `No existe cart con id ${cid}` });
-            }
-    
-            res.setHeader('Content-Type', 'application/json');
-            return res.status(200).json({ cart });
-        } catch (error) {
-            processErrors(res, error);
-        }
-
-})
-
-router.post("/", async(req, res)=>{
-
+router.get('/:cid', async(req,res)=>{
+    let {cid} = req.params
     try {
-		let newCart = await CarstManager.addCart();
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(201).json({ payload: "Carrito creado exitosamente", newCart });
-	} catch (error) {
-		processErrors(res, error)
-	}
-    
+        let cartById = await cartManager.getCartById(cid)
+        if (!cartById) {
+            res.setHeader('Content-Type','application/json')
+            return res.status(404).json({error:'Carrito no encontrado'})
+        }
+        res.setHeader('Content-Type','application/json')
+        return res.status(200).json({cartById})
+    } catch (error) {
+        errorHandler(res, error)
+    }
 })
 
-router.post("/:cid/product/:pid", async (req, res) => {
-	let { cid, pid } = req.params;
-	cid = Number(cid);
-	pid = Number(pid);
-
-	if (isNaN(cid) || isNaN(pid)) {
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(400).json({ error: `Se requieren ids numéricos` });
-	}
-
-	try {
-		let updatedCart = await CarstManager.addProductToCart(cid, pid);
-		res.setHeader('Content-Type', 'application/json');
-		return res.status(200).json({ payload: `Producto agregado al carrito`, updatedCart });
-	} catch (error) {
-		processErrors(res, error)
-	}
+router.get('/:cid/products', async (req, res) => {
+    const { id } = req.params;
+    try {
+        let cartById = await cartManager.getCartById(id)
+        if (!cartById) {
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(404).json({ error: 'Carrito no encontrado' });
+        }
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json({ products: cartById.products });
+    } catch (error) {
+        errorHandler(res, error);
+    }
 });
 
+router.post('/', async (req, res) => {
+    try {
+        await cartManager.createCart();
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(201).json({ message: 'Cart created' });
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
 
-router.put("/:id", (req, res)=>{
+router.post('/:cid/product/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+    try {
+        await cartManager.addProductToCart(cid, pid);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json({ message: 'Product added to cart' });
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
 
-    res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload:`put a carts`});
-})
+router.delete('/:cid', async (req, res) => {
+    const { cid } = req.params;
+    try {
+        await cartManager.deleteCart(cid);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json({ message: 'Cart deleted' });
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});
 
-router.delete("/:id", (req, res)=>{
-
-    res.setHeader('Content-Type','application/json');
-    return res.status(200).json({payload:`delete a carts`});
-})
+router.delete('/:cid/product/:pid', async (req, res) => {
+    const { cid, pid } = req.params;
+    try {
+        await cartManager.deleteProductFromCart(cid, pid);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).json({ message: 'Product deleted from cart' });
+    } catch (error) {
+        errorHandler(res, error);
+    }
+});

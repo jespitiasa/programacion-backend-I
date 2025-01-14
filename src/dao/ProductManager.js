@@ -1,87 +1,63 @@
-import fs from 'fs';
+import fs from "fs";
 
-export class ProductManager {
-	static #path = '';
-	static setPath(rutaArchivo = '') {
-		this.#path = rutaArchivo;
-	}
-	static async getProducts() {
-		if (fs.existsSync(this.#path)) {
-			return JSON.parse(
-				await fs.promises.readFile(this.#path, { encoding: 'utf-8' })
-			);
-		} else {
-			return [];
-		}
-	}
+export class productManager {
+  static #path = "";
 
-	static async getProductsById(pid) {
-		let products = await this.getProducts();
-		let product = products.find((p) => p.id === pid);
+  static setPath(filePath = "") {
+    this.#path = filePath;
+  }
 
-		return product;
-	}
+  static async getProducts() {
+    if (fs.existsSync(this.#path)) {
+      return JSON.parse(
+        await fs.promises.readFile(this.#path, { encoding: "utf-8" })
+      );
+    } else {
+      return [];
+    }
+  }
 
-	static async getProductByTitle(title) {
-		let products = await this.getProducts();
-		let product = products.find(
-			(p) => p.title.toLowerCase() === title.trim().toLowerCase()
-		);
-		return product;
-	}
-	static async addProduct(product = {}) {
-		let products = await this.getProducts();
+  static async getProductsById(id) {
+    const products = await this.getProducts();
+    let product = products.find((prod) => prod.id === id);
+    return product;
+  }
 
-		let id = 1;
-		if (products.length > 0) {
-			id = products[products.length - 1].id + 1;
-		}
+  static async addProduct(product) {
+    try {
+      const products = await this.getProducts();
+      products.push(product);
+      await fs.promises.writeFile(
+        this.#path,
+        JSON.stringify(products, null, 2)
+      );
+    } catch (error) {
+      throw new Error("Error adding product");
+    }
+  }
+  static async updateProduct(id, product) {
+    const products = await this.getProducts();
+    const index = products.findIndex((prod) => prod.id === id);
+    if (index !== -1) {
+      products[index] = product;
+      await fs.promises.writeFile(
+        this.#path,
+        JSON.stringify(products, null, 2)
+      );
+    }
+  }
 
-		let newProduct = {
-			id,
-			...product,
-		};
-		products.push(newProduct);
-		await this.#fileRecord(JSON.stringify(products, null, 5));
-		return newProduct;
-	}
-
-	static async modifyProduct(pid, modifications = {}) {
-		let products = await this.getProducts();
-		let indexProduct = products.findIndex(p => p.pid === pid);
-		if (indexProduct === -1) {
-			throw new Error(`No existe producto con ese Id ${pid}`);
-		}
-
-		products[indexProduct] = {
-			...products[indexProduct],
-			...modifications,
-			pid,
-		};
-
-		await this.#fileRecord(JSON.stringify(products, null, 5));
-		return products[indexProduct];
-	}
-
-	static async deleteProductById(pid) {
-		let products = await this.getProducts();
-		let deletedProduct = products.find((p) => p.pid === pid);
-
-		await this.#fileDelete(pid)
-
-		return deletedProduct;
-	}
-
-	static async #fileRecord(data = '') {
-		if (typeof data != 'string') {
-			throw new Error(`Error en fileRecord- Argumento con formato inválido`);
-		}
-		await fs.promises.writeFile(this.#path, data);
-	}
-
-	static async #fileDelete(pid) {
-		let products = await this.getProducts();
-		let updatedProducts = products.filter((p) => p.pid !== pid);
-		await this.#fileRecord(JSON.stringify(updatedProducts, null, 5));
-	}
+  static async deleteProduct(id) {
+    const products = await this.getProducts();
+    const index = products.findIndex((prod) => prod.id === id);
+    if (index !== -1) {
+      products.splice(index, 1);
+      await fs.promises.writeFile(
+        this.#path,
+        JSON.stringify(products, null, 2)
+      );
+      return true;
+    }
+    return false;
+  }
 }
