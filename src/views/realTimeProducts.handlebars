@@ -1,11 +1,90 @@
-<h1>Productos en tiempo real</h1>
-<form id="product-form">
-    <label for="title">Título:</label>
-    <input type="text" id="title" name="title" required>
-    <label for="price">Precio:</label>
-    <input type="number" id="price" name="price" required>
-    <button type="submit">Agregar producto</button>
-</form>
+<main class="rtp-main">
+  <h1>Nuestros Productos</h1>
+  <div class="form-container">
+    <form id="addProductForm" class="add-form">
+      <h2 class="form-title">Añadir un producto</h2>
+      <input
+        type="text"
+        id="title"
+        class="input_field"
+        placeholder="Título"
+        required
+      />
+      <input
+        type="text"
+        id="description"
+        class="input_field"
+        placeholder="Descripción"
+        required
+      />
+      <input
+        type="text"
+        id="code"
+        class="input_field"
+        placeholder="Código del producto"
+        required
+      />
+      <input
+        type="number"
+        id="price"
+        class="input_field"
+        placeholder="Precio"
+        required
+      />
+      <input
+        type="number"
+        id="stock"
+        class="input_field"
+        placeholder="Stock"
+        required
+      />
+      <input
+        type="text"
+        id="category"
+        class="input_field"
+        placeholder="Categoría"
+        required
+      />
+      <input
+        type="text"
+        id="thumbnail"
+        class="input_field"
+        placeholder="URL de Imagen"
+        required
+      />
+      <button type="submit" class="main-button">Añadir Producto</button>
+    </form>
+    <form id="deleteProductForm" class="add-form">
+      <h2 class="form-title">Eliminar un producto</h2>
+      <input
+        type="text"
+        id="productId"
+        class="input_field"
+        placeholder="ID del Producto"
+        required
+      />
+      <button type="submit" class="delete-button">Eliminar Producto</button>
+    </form>
+    <div class="products-container" id="productos-list">
+      {{#each products}}
+        <div class="card" data-id="{{this.id}}">
+          <div class="card-img">
+            <img src="{{this.thumbnail}}" alt="" />
+          </div>
+          <div class="card-info">
+            <p class="text-title">{{this.title}}</p>
+            <p class="text-body">{{this.description}}</p>
+          </div>
+          <div class="card-footer">
+            <span class="text-title">
+              {{this.price}}
+            </span>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+</main>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="/js/index.js"></script> 
+<script src="js/index.js"></script>

@@ -1,9 +1,12 @@
 import fs from 'fs'
+
 export class cartManager {
     static #path = ''
+
     static setPath(filePath = '') {
         this.#path = filePath
     }
+
     static async getCart() {
         if (fs.existsSync(this.#path)) {
             return JSON.parse(await fs.promises.readFile(this.#path, { encoding: 'utf-8' }))
@@ -11,10 +14,12 @@ export class cartManager {
             return []
         }
     }
+
     static async getCartById(id) {
         const carts = await this.getCart();
         return carts.find(cart => cart.id === parseInt(id)) || null;
     }
+
     static async createCart() {
         try {
             let carts = await this.getCart();
@@ -26,6 +31,7 @@ export class cartManager {
             throw new Error('Error creating cart');
         }
     }
+
     static async addProductToCart(cartid, productid) {
         try {
             let carts = await this.getCart();
@@ -33,17 +39,20 @@ export class cartManager {
             if (!cart) {
                 throw new Error('Cart not found');
             }
+
             let product = cart.products.find(prod => prod.product === productid);
             if (product) {
                 product.quantity++;
             } else {
                 cart.products.push({ product: productid, quantity: 1 });
             }
+
             await fs.promises.writeFile(this.#path, JSON.stringify(carts, null, 2));
         } catch (error) {
             throw new Error('Error adding product to cart');
         }
     }
+
     static async deleteCart(id) {
         let carts = await this.getCart();
         let index = carts.findIndex(cart => cart.id === parseInt(id));
@@ -54,6 +63,7 @@ export class cartManager {
         }
         return false;
     }
+
     static async deleteProductFromCart(cartid, productid) {
         try {
             let carts = await this.getCart();

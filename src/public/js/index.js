@@ -1,82 +1,76 @@
-import { Socket } from "socket.io";
-const productsList = document.getElementById('productsList');
-const addForm = document.getElementById('addForm');
-const deleteForm = document.getElementById('deleteForm');
+const socket = io();
 
+// Función para renderizar productos
+const renderProducts = (productos) => {
+  const productosList = document.getElementById("productos-list");
+  productosList.innerHTML = "";
 
-const socket= io()
+  productos.forEach((product) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.id = product.id;
 
-socket.on("newProduct", product => {
-    alert(`Alguien ha agregado un producto: ${product.title}`)
-}) 
+    const cardImg = document.createElement("div");
+    cardImg.className = "card-img";
+    const img = document.createElement("img");
+    img.src = product.thumbnail;
+    img.alt = "";
+    cardImg.appendChild(img);
 
-socket.on("deletedProduct", product => {
-    alert(`Alguien ha eliminado un producto: ${product.title}`)
-}) 
+    const cardInfo = document.createElement("div");
+    cardInfo.className = "card-info";
+    const title = document.createElement("p");
+    title.className = "text-title";
+    title.textContent = product.title;
+    const body = document.createElement("p");
+    body.className = "text-body";
+    body.textContent = product.description;
+    cardInfo.appendChild(title);
+    cardInfo.appendChild(body);
 
-// AGREGAR PRODUCTO
-addForm.addEventListener('submit', async (e) => {
+    const cardFooter = document.createElement("div");
+    cardFooter.className = "card-footer";
+    const price = document.createElement("span");
+    price.className = "text-title";
+    price.textContent = product.price;
+
+    cardFooter.appendChild(price);
+    card.appendChild(cardImg);
+    card.appendChild(cardInfo);
+    card.appendChild(cardFooter);
+    productosList.appendChild(card);
+  });
+};
+
+// Escuchar eventos de productos
+socket.on("products", (productos) => {
+  renderProducts(productos);
+});
+
+// Añadir producto mediante formulario
+document.getElementById("addProductForm")
+  .addEventListener("submit", function (e) {
     e.preventDefault();
-    const title = document.getElementById('title').value;
-    const price = document.getElementById('price').value;
-    const description = document.getElementById('description').value;
-  
-    await fetch('/realtimeproducts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title, price, description }),
-    });
-    addForm.reset();
+    const product = {
+      title: document.getElementById("title").value,
+      description: document.getElementById("description").value,
+      code: document.getElementById("code").value,
+      price: document.getElementById("price").value,
+      status: true,
+      stock: document.getElementById("stock").value,
+      category: document.getElementById("category").value,
+      thumbnail: document.getElementById("thumbnail").value,
+      id: 0,
+    };
+    socket.emit("addProduct", product);
+    // Limpiar formulario
+    document.getElementById("addProductForm").reset();
   });
 
-  // ELIMINAR PRODUCTO
-deleteForm.addEventListener('submit', async (e) => {
+// Eliminar producto mediante formulario
+document.getElementById("deleteProductForm")
+  .addEventListener("submit", function (e) {
     e.preventDefault();
-    const id = document.getElementById('id').value;
-    await fetch('/realtimeproducts', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id }),
-    });
-  
-    deleteForm.reset();
-  });
-
-  //OBTENER PRODUCTOS
-socket.on('products', (data) => {
-    console.log(data);
-    productsList.innerHTML = '';
-    const divContainer = document.createElement('div');
-    divContainer.classList.add('container');
-    divContainer.classList.add('mt-5');
-  
-    const divRow = document.createElement('div');
-    divRow.classList.add('row');
-    divRow.classList.add('p-2');
-    data.forEach((product) => {
-      const divCol = document.createElement('div');
-      divCol.classList.add('col-4');
-      divCol.classList.add('p-2');
-  
-      const card = document.createElement('div');
-      card.classList.add('card');
-      card.classList.add('border-light');
-      card.innerHTML = `                
-            <div class="card-body bg-dark text-white">
-              <h5 class="card-title text-uppercase">${product.title}</h5>
-              <p class="card-text">ID: ${product.pid}</p>
-              <p class="card-text">${product.description}</p>
-              <p class="card-text">$${product.price}</p>    
-         
-      `;
-      divCol.appendChild(card);
-      divRow.appendChild(divCol);
-      divContainer.appendChild(divRow);
-      productsList.appendChild(divContainer);
-      //todos estos append para poder hacer una grid con columnas y filas
-    });
+    const productId = document.getElementById("productId").value;
+    socket.emit("deleteProduct", productId);
   });
