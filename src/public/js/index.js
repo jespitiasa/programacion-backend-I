@@ -1,3 +1,13 @@
+$('.buy').click(function(){
+  $('.bottom').addClass("clicked");
+});
+
+$('.remove').click(function(){
+  $('.bottom').removeClass("clicked");
+});
+
+//_____________________________________
+
 const socket = io();
 
 // Función para renderizar productos
