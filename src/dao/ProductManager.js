@@ -1,63 +1,65 @@
-import fs from "fs";
+import { productModel } from "./models/ProductsModel.js";
 
 export class productManager {
-  static #path = "";
-
-  static setPath(filePath = "") {
-    this.#path = filePath;
+  static async getProducts({ query = {}, options = {} }) {
+    try {
+      options.lean = true;
+      return await productModel.paginate(query, options);
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error getting products");
+    }
   }
-
-  static async getProducts() {
-    if (fs.existsSync(this.#path)) {
-      return JSON.parse(
-        await fs.promises.readFile(this.#path, { encoding: "utf-8" })
-      );
-    } else {
-      return [];
+  static async getProductsById(id) {
+    try {
+      const productById = await productModel.findById(id).lean();
+      console.log(productById);
+      return productById;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error getting product by id");
     }
   }
 
-  static async getProductsById(id) {
-    const products = await this.getProducts();
-    let product = products.find((prod) => prod.id === id);
-    return product;
+  static async getUniqueCategories() {
+    try {
+      const uniqueCategories = await productModel.distinct("category").lean();
+      return uniqueCategories;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error getting unique categories");
+    }
   }
 
   static async addProduct(product) {
     try {
-      const products = await this.getProducts();
-      products.push(product);
-      await fs.promises.writeFile(
-        this.#path,
-        JSON.stringify(products, null, 2)
-      );
+      const newProduct = await productModel.create(product);
+      return newProduct;
     } catch (error) {
       throw new Error("Error adding product");
     }
   }
-  static async updateProduct(id, product) {
-    const products = await this.getProducts();
-    const index = products.findIndex((prod) => prod.id === id);
-    if (index !== -1) {
-      products[index] = product;
-      await fs.promises.writeFile(
-        this.#path,
-        JSON.stringify(products, null, 2)
+  static async updateProduct(productId, updatedData) {
+    try {
+      const updatedProduct = await productModel.findByIdAndUpdate(
+        productId,
+        updatedData,
+        { new: true }
       );
+      return updatedProduct;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error updating product");
     }
   }
 
   static async deleteProduct(id) {
-    const products = await this.getProducts();
-    const index = products.findIndex((prod) => prod.id === id);
-    if (index !== -1) {
-      products.splice(index, 1);
-      await fs.promises.writeFile(
-        this.#path,
-        JSON.stringify(products, null, 2)
-      );
-      return true;
+    try {
+      const deletedProduct = await productModel.findByIdAndDelete(id);
+      return deletedProduct;
+    } catch (error) {
+      console.log(error);
+      throw new Error("Error deleting product");
     }
-    return false;
   }
 }
